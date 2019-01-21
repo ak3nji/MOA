@@ -55,7 +55,7 @@ public class FilteredClassifier extends AbstractClassifier implements MultiClass
 
     @Override
     public void resetLearningImpl() {
-        this.classifier = ((Classifier) getPreparedClassOption(this.baseLearnerOption)).copy();
+        this.classifier = ((Classifier) getPreparedClassOption(this.baseLearnerOption));
         this.classifier.resetLearning();
         this.streamHeader = null;
     }

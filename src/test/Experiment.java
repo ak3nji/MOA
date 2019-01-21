@@ -30,6 +30,7 @@ import moa.classifiers.core.driftdetection.EWMAChartDM;
 import moa.classifiers.drift.SingleClassifierDrift;
 import moa.classifiers.meta.AdaptiveRandomForest;
 import moa.classifiers.meta.FilteredClassifier;
+import moa.classifiers.meta.OnlineSubspaceEnsemble;
 import moa.classifiers.meta.HEFT;
 import moa.classifiers.trees.HoeffdingAdaptiveTree;
 import moa.evaluation.preview.LearningCurve;
@@ -48,6 +49,12 @@ import moa.tasks.WriteStreamToARFFFile;
 public class Experiment {
 
     public Experiment() {
+    }
+
+    public static void main(String[] args) throws IOException {
+        Experiment exp = new Experiment();
+        exp.run(true);
+        //exp.generateStreams();
     }
 
     public static ArffFileStream getArffDataset(String nameFile) throws FileNotFoundException {
@@ -77,7 +84,7 @@ public class Experiment {
         learnerDDM.driftDetectionMethodOption.setCurrentObject(new DDM());
         
         FilteredClassifier learnerFilter = new FilteredClassifier();
-        learnerFilter.inputStringOption.setValue("1-3");
+        learnerFilter.inputStringOption.setValue("1-3,8");
 
         // Load Dataset
         ArffFileStream stream = getArffDataset(pathStream);
@@ -87,11 +94,12 @@ public class Experiment {
         //learners.add(new ClassifierTest(new LFDD(), "LFDD"));
         //learners.add(new ClassifierTest(new FDD(), "FDD"));
         //learners.add(new ClassifierTest(learnerDDM, "DDM"));
-        learners.add(new ClassifierTest(learnerFilter, "Filtered"));
+        //learners.add(new ClassifierTest(learnerFilter, "Filtered"));
+        learners.add(new ClassifierTest(new OnlineSubspaceEnsemble(), "SubSpace"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
-        //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
+        learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
         //learners.add(new ClassifierTest(new HEFT(), "HEFT"));
-        //learners.add(new ClassifierTest(new AdaptiveRandomForest(), "ARF"));
+        learners.add(new ClassifierTest(new AdaptiveRandomForest(), "ARF"));
 
         // Prepare Learners
         for (int i = 0; i < learners.size(); i++) {
@@ -577,11 +585,5 @@ public class Experiment {
         this.generateRBFDriftStream("LED_M", 0.0001);
         this.generateRBFDriftStream("LED_F", 0.001);
         this.generateHyperplaneStream("HYPER");*/                     
-    }
-
-    public static void main(String[] args) throws IOException {
-        Experiment exp = new Experiment();
-        exp.run(true);
-        //exp.generateStreams();
-    }
+    }    
 }
