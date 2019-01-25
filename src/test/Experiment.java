@@ -22,17 +22,13 @@ import java.util.Locale;
 
 import com.yahoo.labs.samoa.instances.ArffLoader;
 
-import moa.classifiers.LFDD;
-import moa.classifiers.bayes.NaiveBayes;
 import moa.classifiers.core.driftdetection.DDM;
-import moa.classifiers.core.driftdetection.EDDM;
-import moa.classifiers.core.driftdetection.EWMAChartDM;
 import moa.classifiers.drift.SingleClassifierDrift;
 import moa.classifiers.meta.AdaptiveRandomForest;
+import moa.classifiers.meta.DynamicWeightedMajority;
 import moa.classifiers.meta.FilteredClassifier;
+import moa.classifiers.meta.OnlineAccuracyUpdatedEnsemble;
 import moa.classifiers.meta.OnlineSubspaceEnsemble;
-import moa.classifiers.meta.HEFT;
-import moa.classifiers.trees.HoeffdingAdaptiveTree;
 import moa.evaluation.preview.LearningCurve;
 import moa.streams.ArffFileStream;
 import moa.streams.ConceptDriftStream;
@@ -66,12 +62,19 @@ public class Experiment {
     private ArrayList<String> mxGetDataSets() {
         ArrayList<String> namesDataSet = new ArrayList<>();
 
-        //namesDataSet.add("data/SEAFD_A.arff");
-        //namesDataSet.add("data/SEAFD_G.arff");
-        //namesDataSet.add("data/SEA_A.arff");
-        //namesDataSet.add("data/SEA_G.arff");
+        namesDataSet.add("data/SEAFD_A.arff");
+        namesDataSet.add("data/SEAFD_G.arff");
+        namesDataSet.add("data/SEA_A.arff");
+        namesDataSet.add("data/SEA_G.arff");
+        namesDataSet.add("data/AGR_A.arff");
+        namesDataSet.add("data/AGR_G.arff");
+        namesDataSet.add("data/HYPER.arff");
+        namesDataSet.add("data/RBF_M.arff");
+        namesDataSet.add("data/RBF_F.arff");
+        namesDataSet.add("data/LED_A.arff");
+        namesDataSet.add("data/LED_G.arff");
         namesDataSet.add("data/weather.arff");
-        //namesDataSet.add("data/elecNormNew.arff");
+        namesDataSet.add("data/elecNormNew.arff");
         //namesDataSet.add("data/kddcup.arff");
 
         return namesDataSet;
@@ -96,8 +99,10 @@ public class Experiment {
         //learners.add(new ClassifierTest(learnerDDM, "DDM"));
         //learners.add(new ClassifierTest(learnerFilter, "Filtered"));
         learners.add(new ClassifierTest(new OnlineSubspaceEnsemble(), "SubSpace"));
+        learners.add(new ClassifierTest(new OnlineAccuracyUpdatedEnsemble(), "OAUE"));
+        learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
-        learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
+        //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
         //learners.add(new ClassifierTest(new HEFT(), "HEFT"));
         learners.add(new ClassifierTest(new AdaptiveRandomForest(), "ARF"));
 
@@ -574,16 +579,16 @@ public class Experiment {
     }
 
     void generateStreams(){        
-        /*this.generateAGRAWALStream("AGR_G", 5000);
-        this.generateAGRAWALStream("AGR_A", 1);*/
-        this.generateSEAStream("SEA_G", 5000);
-        this.generateSEAStream("SEA_A", 1);
+        this.generateAGRAWALStream("AGR_G", 5000);
+        this.generateAGRAWALStream("AGR_A", 1);
+        //this.generateSEAStream("SEA_G", 5000);
+        //this.generateSEAStream("SEA_A", 1);
         this.generateSEAFDStream("SEAFD_G", 5000);
         this.generateSEAFDStream("SEAFD_A", 1);
-        /*this.generateLEDStream("LED_G", 5000);
+        this.generateLEDStream("LED_G", 5000);
         this.generateLEDStream("LED_A", 1);
-        this.generateRBFDriftStream("LED_M", 0.0001);
-        this.generateRBFDriftStream("LED_F", 0.001);
-        this.generateHyperplaneStream("HYPER");*/                     
+        this.generateRBFDriftStream("RBF_M", 0.0001);
+        this.generateRBFDriftStream("RBF_F", 0.001);
+        this.generateHyperplaneStream("HYPER");                     
     }    
 }
