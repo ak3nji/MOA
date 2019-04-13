@@ -22,13 +22,18 @@ import java.util.Locale;
 
 import com.yahoo.labs.samoa.instances.ArffLoader;
 
+import moa.classifiers.core.driftdetection.ADWIN;
+import moa.classifiers.core.driftdetection.ADWINChangeDetector;
 import moa.classifiers.core.driftdetection.DDM;
+import moa.classifiers.core.driftdetection.EDDM;
 import moa.classifiers.drift.SingleClassifierDrift;
 import moa.classifiers.meta.AdaptiveRandomForest;
+import moa.classifiers.meta.DDOnlineSubspaceEnsemble;
 import moa.classifiers.meta.DynamicWeightedMajority;
 import moa.classifiers.meta.FilteredClassifier;
 import moa.classifiers.meta.OnlineAccuracyUpdatedEnsemble;
 import moa.classifiers.meta.OnlineSubspaceEnsemble;
+import moa.classifiers.meta.PersistentClassifier;
 import moa.evaluation.preview.LearningCurve;
 import moa.streams.ArffFileStream;
 import moa.streams.ConceptDriftStream;
@@ -62,17 +67,17 @@ public class Experiment {
     private ArrayList<String> mxGetDataSets() {
         ArrayList<String> namesDataSet = new ArrayList<>();
 
-        namesDataSet.add("data/SEAFD_A.arff");
-        namesDataSet.add("data/SEAFD_G.arff");
-        namesDataSet.add("data/SEA_A.arff");
-        namesDataSet.add("data/SEA_G.arff");
-        namesDataSet.add("data/AGR_A.arff");
-        namesDataSet.add("data/AGR_G.arff");
-        namesDataSet.add("data/HYPER.arff");
-        namesDataSet.add("data/RBF_M.arff");
-        namesDataSet.add("data/RBF_F.arff");
-        namesDataSet.add("data/LED_A.arff");
-        namesDataSet.add("data/LED_G.arff");
+        //namesDataSet.add("data/SEAFD_A.arff");
+        //namesDataSet.add("data/SEAFD_G.arff");
+        //namesDataSet.add("data/SEA_A.arff");
+        //namesDataSet.add("data/SEA_G.arff");
+        //namesDataSet.add("data/AGR_A.arff");
+        //namesDataSet.add("data/AGR_G.arff");
+        //namesDataSet.add("data/HYPER.arff");
+        //namesDataSet.add("data/RBF_M.arff");
+        //namesDataSet.add("data/RBF_F.arff");
+        //namesDataSet.add("data/LED_A.arff");
+        //namesDataSet.add("data/LED_G.arff");
         namesDataSet.add("data/weather.arff");
         namesDataSet.add("data/elecNormNew.arff");
         //namesDataSet.add("data/kddcup.arff");
@@ -98,8 +103,14 @@ public class Experiment {
         //learners.add(new ClassifierTest(new FDD(), "FDD"));
         //learners.add(new ClassifierTest(learnerDDM, "DDM"));
         //learners.add(new ClassifierTest(learnerFilter, "Filtered"));
+        
+        DDOnlineSubspaceEnsemble learnerDDOSE = new DDOnlineSubspaceEnsemble();
+        learnerDDOSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
+        learnerDDOSE.minchunkSizeOption.setValue(10);
+        
+        learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
         learners.add(new ClassifierTest(new OnlineSubspaceEnsemble(), "SubSpace"));
-        learners.add(new ClassifierTest(new OnlineAccuracyUpdatedEnsemble(), "OAUE"));
+        learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
         learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
         //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
