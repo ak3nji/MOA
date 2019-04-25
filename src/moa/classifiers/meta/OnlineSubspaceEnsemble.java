@@ -19,6 +19,7 @@ import moa.AbstractMOAObject;
 import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.MultiClassClassifier;
+import moa.classifiers.core.driftdetection.ChangeDetector;
 import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
@@ -41,7 +42,7 @@ import weka.attributeSelection.SymmetricalUncertAttributeSetEval;
  * </p>
  *
  * <p>
- * [OR] N. Oza and S. Russell. Online bagging and boosting. In Artiﬁcial
+ * [OR] N. Oza and S. Russell. Online bagging and boosting. 
  * Intelligence and Statistics 2001, pages 105–112. Morgan Kaufmann, 2001.
  * </p>
  *
@@ -49,7 +50,7 @@ import weka.attributeSelection.SymmetricalUncertAttributeSetEval;
  * Parameters:
  * </p>
  * <ul>
- * <li>-l : Classiﬁer to train</li>
+ * <li>-l :  to train</li>
  * <li>-s : The number of models in the bag</li>
  * </ul>
  *
@@ -72,21 +73,26 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
             Integer.MAX_VALUE);
 
     public IntOption chunkSizeOption = new IntOption("chunkSize", 'c',
-            "The chunk size used for classifier creation and evaluation.", 2000, 1, Integer.MAX_VALUE);
+            "The chunk size used for classifier creation and evaluation.", 10, 1, Integer.MAX_VALUE);
 
     public FloatOption subspaceSizeOption = new FloatOption("SubspaceSize", 'p',
             "Size of each subspace. Percentage of the number of attributes.", 0.5, 0.1, 1.0);
 
     public FloatOption lambdaOption = new FloatOption("lambda", 'a', "The lambda parameter for bagging.", 6.0, 1.0,
             Float.MAX_VALUE);
+    
+    public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
+            "Drift detection method to use.", ChangeDetector.class, "DDM");
 
     protected List<SubspaceLearner> ensemble;
     protected List<Double> weights;
     protected Instances buffer;
     protected int subspaceSize;
+    protected ChangeDetector driftDetectionMethod;
 
     @Override
     public void resetLearningImpl() {
+    	this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
         this.ensemble = null;
         this.buffer = null;
     }
@@ -150,7 +156,7 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
             }
         }
     }
-
+    protected int testCounter = 0;
     @Override
     public double[] getVotesForInstance(Instance instance) {
 
@@ -167,6 +173,15 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
                 combinedVote.addValues(vote);
             }
         }
+        /*testCounter++;
+        double[] votes;
+        if (testCounter % 1000 == 0){
+        	System.out.println("Classe: " + instance.classValue());
+        	votes = combinedVote.getArrayRef();
+        	for (double votesClass: votes) {
+        		System.out.println(votesClass);
+        	}
+        }*/
         return combinedVote.getArrayRef();
     }
 

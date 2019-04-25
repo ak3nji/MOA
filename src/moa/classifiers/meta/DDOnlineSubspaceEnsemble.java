@@ -68,13 +68,16 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
     private static final long serialVersionUID = 1L;
 
     public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l', "Classifier to train.", Classifier.class,
-            "trees.HoeffdingTree");
+            "bayes.NaiveBayes");
 
     public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's', "The number of models in the bag.", 10, 1,
             Integer.MAX_VALUE);
 
     public IntOption minchunkSizeOption = new IntOption("minchunkSize", 'c',
             "The minimium chunk size used for classifier creation and evaluation.", 100, 1, Integer.MAX_VALUE);
+    
+    public IntOption maxchunkSizeOption = new IntOption("maxchunkSize", 'm',
+            "The maximum chunk size used for classifier creation and evaluation.", 1000, 1, Integer.MAX_VALUE);
 
     public FloatOption subspaceSizeOption = new FloatOption("SubspaceSize", 'p',
             "Size of each subspace. Percentage of the number of attributes.", 0.5, 0.1, 1.0);
@@ -158,6 +161,10 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
         // Add instance to buffer or discard it.
     	switch(this.ddmLevel) {
     		case DDM_WARNING_LEVEL:
+    			//Resets buffer if it is a warning before a change
+    			if(!this.isDriftDetected) {
+    				this.buffer = new Instances(instance.dataset());
+    			}
     			this.buffer.add(instance);
     			break;
     		case DDM_OUTCONTROL_LEVEL:
@@ -166,6 +173,11 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
     			this.isDriftDetected = true;
     			break;
     		case DDM_INCONTROL_LEVEL:
+    			//If the buffer size is bigger than the max acceptable, reset buffer
+    			if (sizeBuffer > this.maxchunkSizeOption.getValue()) {
+    				this.buffer = new Instances(instance.dataset());
+    				this.buffer.add(instance); //Remove this line if you want to consider the last warning a false warning and want to wait for a new one
+    			}
     			//If there was a warning and the minimum chunk size wasn't achieved, add instance to buffer.
     			if (sizeBuffer > 0 && sizeBuffer < this.minchunkSizeOption.getValue()) {
     				this.buffer.add(instance);
