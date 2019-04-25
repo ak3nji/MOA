@@ -67,17 +67,17 @@ public class Experiment {
     private ArrayList<String> mxGetDataSets() {
         ArrayList<String> namesDataSet = new ArrayList<>();
 
-        //namesDataSet.add("data/SEAFD_A.arff");
-        //namesDataSet.add("data/SEAFD_G.arff");
-        //namesDataSet.add("data/SEA_A.arff");
-        //namesDataSet.add("data/SEA_G.arff");
-        //namesDataSet.add("data/AGR_A.arff");
-        //namesDataSet.add("data/AGR_G.arff");
-        //namesDataSet.add("data/HYPER.arff");
-        //namesDataSet.add("data/RBF_M.arff");
-        //namesDataSet.add("data/RBF_F.arff");
-        //namesDataSet.add("data/LED_A.arff");
-        //namesDataSet.add("data/LED_G.arff");
+        namesDataSet.add("data/SEAFD_A.arff");
+        namesDataSet.add("data/SEAFD_G.arff");
+        namesDataSet.add("data/SEA_A.arff");
+        namesDataSet.add("data/SEA_G.arff");
+        namesDataSet.add("data/AGR_A.arff");
+        namesDataSet.add("data/AGR_G.arff");
+        namesDataSet.add("data/HYPER.arff");
+        namesDataSet.add("data/RBF_M.arff");
+        namesDataSet.add("data/RBF_F.arff");
+        namesDataSet.add("data/LED_A.arff");
+        namesDataSet.add("data/LED_G.arff");
         namesDataSet.add("data/weather.arff");
         namesDataSet.add("data/elecNormNew.arff");
         //namesDataSet.add("data/kddcup.arff");
@@ -592,8 +592,8 @@ public class Experiment {
     void generateStreams(){        
         this.generateAGRAWALStream("AGR_G", 5000);
         this.generateAGRAWALStream("AGR_A", 1);
-        //this.generateSEAStream("SEA_G", 5000);
-        //this.generateSEAStream("SEA_A", 1);
+        this.generateSEAStream("SEA_G", 5000);
+        this.generateSEAStream("SEA_A", 1);
         this.generateSEAFDStream("SEAFD_G", 5000);
         this.generateSEAFDStream("SEAFD_A", 1);
         this.generateLEDStream("LED_G", 5000);
