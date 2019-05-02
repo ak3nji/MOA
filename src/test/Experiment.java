@@ -107,24 +107,31 @@ public class Experiment {
         //learners.add(new ClassifierTest(learnerDDM, "DDM"));
         //learners.add(new ClassifierTest(learnerFilter, "Filtered"));
         
+        
+        
+        int ensembleSize = 10;
+        
         DDOnlineSubspaceEnsemble learnerDDOSE = new DDOnlineSubspaceEnsemble();
         learnerDDOSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
         learnerDDOSE.minchunkSizeOption.setValue(10);
-        learnerDDOSE.ensembleSizeOption.setValue(9);
+        learnerDDOSE.ensembleSizeOption.setValue(ensembleSize);
         
         
         DDRandomSubspace learnerDDRSE = new DDRandomSubspace();
         learnerDDRSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
         learnerDDRSE.minchunkSizeOption.setValue(10);
-        learnerDDRSE.ensembleSizeOption.setValue(9);
+        learnerDDRSE.ensembleSizeOption.setValue(ensembleSize);
         
         RandomSubspaceEnsemble learnerRSE = new RandomSubspaceEnsemble();
-        learnerRSE.ensembleSizeOption.setValue(9);
+        learnerRSE.ensembleSizeOption.setValue(ensembleSize);
+        
+        OnlineSubspaceEnsemble learnerOSE = new OnlineSubspaceEnsemble();
+        learnerOSE.ensembleSizeOption.setValue(ensembleSize);
         
         learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
         learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
         learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
-        learners.add(new ClassifierTest(new OnlineSubspaceEnsemble(), "SubSpace"));
+        learners.add(new ClassifierTest(learnerOSE, "SubSpace"));
         learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
         learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
