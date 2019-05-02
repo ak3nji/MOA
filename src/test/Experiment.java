@@ -29,11 +29,13 @@ import moa.classifiers.core.driftdetection.EDDM;
 import moa.classifiers.drift.SingleClassifierDrift;
 import moa.classifiers.meta.AdaptiveRandomForest;
 import moa.classifiers.meta.DDOnlineSubspaceEnsemble;
+import moa.classifiers.meta.DDRandomSubspace;
 import moa.classifiers.meta.DynamicWeightedMajority;
 import moa.classifiers.meta.FilteredClassifier;
 import moa.classifiers.meta.OnlineAccuracyUpdatedEnsemble;
 import moa.classifiers.meta.OnlineSubspaceEnsemble;
 import moa.classifiers.meta.PersistentClassifier;
+import moa.classifiers.meta.RandomSubspaceEnsemble;
 import moa.evaluation.preview.LearningCurve;
 import moa.streams.ArffFileStream;
 import moa.streams.ConceptDriftStream;
@@ -45,6 +47,7 @@ import moa.streams.generators.RandomRBFGeneratorDrift;
 import moa.streams.generators.SEAFD;
 import moa.streams.generators.SEAGenerator;
 import moa.tasks.EvaluatePrequential;
+import moa.tasks.EvaluatePrequentialCV;
 import moa.tasks.WriteStreamToARFFFile;
 
 public class Experiment {
@@ -107,8 +110,20 @@ public class Experiment {
         DDOnlineSubspaceEnsemble learnerDDOSE = new DDOnlineSubspaceEnsemble();
         learnerDDOSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
         learnerDDOSE.minchunkSizeOption.setValue(10);
+        learnerDDOSE.ensembleSizeOption.setValue(9);
         
+        
+        DDRandomSubspace learnerDDRSE = new DDRandomSubspace();
+        learnerDDRSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
+        learnerDDRSE.minchunkSizeOption.setValue(10);
+        learnerDDRSE.ensembleSizeOption.setValue(9);
+        
+        RandomSubspaceEnsemble learnerRSE = new RandomSubspaceEnsemble();
+        learnerRSE.ensembleSizeOption.setValue(9);
+        
+        learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
         learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
+        learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
         learners.add(new ClassifierTest(new OnlineSubspaceEnsemble(), "SubSpace"));
         learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
         learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
@@ -130,7 +145,7 @@ public class Experiment {
             stream.restart();
             // Runs the experiment
             EvaluatePrequential evaluation = new EvaluatePrequential();
-            // EvaluatePrequentialCV evaluation = new EvaluatePrequentialCV();
+            //EvaluatePrequentialCV evaluation = new EvaluatePrequentialCV();
             evaluation.prepareForUse();
             evaluation.instanceLimitOption.setValue(100000);
             evaluation.sampleFrequencyOption.setValue(frequency);

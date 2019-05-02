@@ -68,7 +68,7 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
     private static final long serialVersionUID = 1L;
 
     public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l', "Classifier to train.", Classifier.class,
-            "bayes.NaiveBayes");
+            "trees.HoeffdingTree");
 
     public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's', "The number of models in the bag.", 10, 1,
             Integer.MAX_VALUE);
@@ -221,8 +221,8 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
                 tmpClassifier.trainOnInstance(trainInst);
             }
             this.ensembleUpdates++;
-            System.out.println("Ensemble updated - | Changes Detected:"+this.changesDetected+" | Classifier Updates:"+this.ensembleUpdates
-            		+" | Training Set Size:"+this.buffer.size());
+            //System.out.println("Ensemble updated - | Changes Detected:"+this.changesDetected+" | Classifier Updates:"+this.ensembleUpdates
+            //		+" | Training Set Size:"+this.buffer.size());
             
             this.ensemble.add(tmpClassifier);
             this.weights.add(1.0 / (double) this.ensemble.size());

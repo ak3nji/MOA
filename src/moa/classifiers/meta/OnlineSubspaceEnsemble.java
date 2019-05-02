@@ -80,19 +80,17 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
 
     public FloatOption lambdaOption = new FloatOption("lambda", 'a', "The lambda parameter for bagging.", 6.0, 1.0,
             Float.MAX_VALUE);
-    
-    public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
-            "Drift detection method to use.", ChangeDetector.class, "DDM");
+
 
     protected List<SubspaceLearner> ensemble;
     protected List<Double> weights;
     protected Instances buffer;
     protected int subspaceSize;
-    protected ChangeDetector driftDetectionMethod;
+    
 
     @Override
     public void resetLearningImpl() {
-    	this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
+    	
         this.ensemble = null;
         this.buffer = null;
     }
@@ -173,15 +171,7 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
                 combinedVote.addValues(vote);
             }
         }
-        /*testCounter++;
-        double[] votes;
-        if (testCounter % 1000 == 0){
-        	System.out.println("Classe: " + instance.classValue());
-        	votes = combinedVote.getArrayRef();
-        	for (double votesClass: votes) {
-        		System.out.println(votesClass);
-        	}
-        }*/
+
         return combinedVote.getArrayRef();
     }
 
