@@ -1,0 +1,71 @@
+DATASET: data/SEAFD_A.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       86,34        3,17       72,13       83,28       10,50    -0,027163575
+OAccUpdtEnsmbl       87,79        2,48       75,06       85,05        5,73    -0,014834869
+DATASET: data/SEAFD_G.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       85,92        2,34       71,04       82,05        9,80    -0,025344586
+OAccUpdtEnsmbl       87,92        2,45       75,13       84,71        5,56    -0,014390227
+DATASET: data/SEA_A.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       88,49        1,90       76,53       85,96        6,48    -0,016775124
+OAccUpdtEnsmbl       87,56        3,01       74,63       84,82        1,91    -0,004931482
+DATASET: data/SEA_G.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       88,12        1,93       75,52       84,92        6,42    -0,016613437
+OAccUpdtEnsmbl       87,25        2,86       73,73       83,84        1,92    -0,004971904
+DATASET: data/AGR_A.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       79,76        9,47   -Infinity       79,76       16,44    -0,042523930
+OAccUpdtEnsmbl       88,56        9,09   -Infinity       88,56        5,25    -0,013581788
+DATASET: data/AGR_G.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       77,03       10,02   -Infinity       75,57       16,30    -0,042160132
+OAccUpdtEnsmbl       86,21        9,76   -Infinity       85,08        5,42    -0,014026429
+DATASET: data/HYPER.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       82,50        2,24       63,86       64,85       10,88    -0,028133703
+OAccUpdtEnsmbl       87,73        2,28       74,66       75,35        5,98    -0,015481621
+DATASET: data/RBF_M.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       80,98        5,77       72,76       75,41       10,05    -0,025991337
+OAccUpdtEnsmbl       74,23       11,29       63,11       66,69        9,63    -0,024899944
+DATASET: data/RBF_F.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       66,81        4,38       52,47       57,07       10,70    -0,027689061
+OAccUpdtEnsmbl       49,50        5,51       27,70       34,67        9,44    -0,024414880
+DATASET: data/LED_A.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       70,28        5,33       66,38       67,09        6,86    -0,017745252
+OAccUpdtEnsmbl       72,74        4,49       69,17       69,82       10,91    -0,028214547
+DATASET: data/LED_G.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       68,98        4,83       64,89       65,67        6,73    -0,017421876
+OAccUpdtEnsmbl       72,31        4,28       68,66       69,35       11,14    -0,028820877
+DATASET: data/weather.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       78,33        1,93       31,20       32,48        1,64    -0,004244309
+OAccUpdtEnsmbl       76,46        2,63       24,95       26,60        0,59    -0,001536035
+DATASET: data/elecNormNew.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+         ARF       88,31        2,64       71,34       17,48        4,75    -0,012288284
+OAccUpdtEnsmbl       87,80        4,23       70,38       13,31        2,00    -0,005174014
+
+AVERAGE RESULTS:
+  Classifier    Accuracy
+------------------------
+OAccUpdtEnsmbl       80,47
+         ARF       80,14

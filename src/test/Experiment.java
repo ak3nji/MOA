@@ -110,35 +110,42 @@ public class Experiment {
         
         
         int ensembleSize = 10;
+        int windowSize = 10;
+        boolean crossValidation = false;
         
         DDOnlineSubspaceEnsemble learnerDDOSE = new DDOnlineSubspaceEnsemble();
         learnerDDOSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
-        learnerDDOSE.minchunkSizeOption.setValue(10);
+        learnerDDOSE.minchunkSizeOption.setValue(windowSize);
         learnerDDOSE.ensembleSizeOption.setValue(ensembleSize);
         
         
         DDRandomSubspace learnerDDRSE = new DDRandomSubspace();
         learnerDDRSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
-        learnerDDRSE.minchunkSizeOption.setValue(10);
+        learnerDDRSE.minchunkSizeOption.setValue(windowSize);
         learnerDDRSE.ensembleSizeOption.setValue(ensembleSize);
         
         RandomSubspaceEnsemble learnerRSE = new RandomSubspaceEnsemble();
+        learnerRSE.chunkSizeOption.setValue(windowSize);
         learnerRSE.ensembleSizeOption.setValue(ensembleSize);
         
         OnlineSubspaceEnsemble learnerOSE = new OnlineSubspaceEnsemble();
+        learnerOSE.chunkSizeOption.setValue(windowSize);
         learnerOSE.ensembleSizeOption.setValue(ensembleSize);
         
-        learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
-        learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
-        learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
-        learners.add(new ClassifierTest(learnerOSE, "SubSpace"));
-        learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
-        learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
+        OnlineAccuracyUpdatedEnsemble learnerOACUE = new OnlineAccuracyUpdatedEnsemble();
+        learnerOACUE.windowSizeOption.setValue(10);
+        //learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
+        //learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
+        //learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
+        //learners.add(new ClassifierTest(learnerOSE, "SubSpace"));
+        //learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
+        //learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
         //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
         //learners.add(new ClassifierTest(new HEFT(), "HEFT"));
         learners.add(new ClassifierTest(new AdaptiveRandomForest(), "ARF"));
-
+        learners.add(new ClassifierTest(learnerOACUE, "OAccUpdt"));
+        //learners.add(new ClassifierTest(new OnlineAccuracyUpdatedEnsemble(), "OAccUpdtEnsmbl"));
         // Prepare Learners
         for (int i = 0; i < learners.size(); i++) {
             learners.get(i).learner.setModelContext(stream.getHeader());
@@ -161,7 +168,8 @@ public class Experiment {
             evaluation.learnerOption.setCurrentObject(learners.get(i).learner);
             LearningCurve lc = (LearningCurve) evaluation.doTask();
             // Extract information (if evaluation is Prequential, last parameter is false)
-            this.getValuesForExperiment(learners.get(i), lc, false);
+            
+            this.getValuesForExperiment(learners.get(i), lc, crossValidation);
         }
 
         if (save) {
