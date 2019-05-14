@@ -27,7 +27,9 @@ import moa.classifiers.core.driftdetection.ADWINChangeDetector;
 import moa.classifiers.core.driftdetection.DDM;
 import moa.classifiers.core.driftdetection.EDDM;
 import moa.classifiers.drift.SingleClassifierDrift;
+import moa.classifiers.drift.DriftDetectionMethodClassifier;
 import moa.classifiers.meta.AdaptiveRandomForest;
+import moa.classifiers.meta.DDClassifier;
 import moa.classifiers.meta.DDOnlineSubspaceEnsemble;
 import moa.classifiers.meta.DDRandomSubspace;
 import moa.classifiers.meta.DynamicWeightedMajority;
@@ -74,11 +76,11 @@ public class Experiment {
         namesDataSet.add("data/SEAFD_G.arff");
         namesDataSet.add("data/SEA_A.arff");
         namesDataSet.add("data/SEA_G.arff");
-        namesDataSet.add("data/AGR_A.arff");
-        namesDataSet.add("data/AGR_G.arff");
-        namesDataSet.add("data/HYPER.arff");
-        namesDataSet.add("data/RBF_M.arff");
-        namesDataSet.add("data/RBF_F.arff");
+        //namesDataSet.add("data/AGR_A.arff");
+        //namesDataSet.add("data/AGR_G.arff");
+        //namesDataSet.add("data/HYPER.arff");
+        //namesDataSet.add("data/RBF_M.arff");
+        //namesDataSet.add("data/RBF_F.arff");
         namesDataSet.add("data/LED_A.arff");
         namesDataSet.add("data/LED_G.arff");
         namesDataSet.add("data/weather.arff");
@@ -134,17 +136,23 @@ public class Experiment {
         
         OnlineAccuracyUpdatedEnsemble learnerOACUE = new OnlineAccuracyUpdatedEnsemble();
         learnerOACUE.windowSizeOption.setValue(10);
-        //learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
-        //learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
-        //learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
-        //learners.add(new ClassifierTest(learnerOSE, "SubSpace"));
-        //learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
+        
+//        learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
+        learners.add(new ClassifierTest(new DDClassifier(), "DDBasic"));
+//        learners.add(new ClassifierTest(new DriftDetectionMethodClassifier(), "DDM_MOA"));
+        learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
+//        learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
+//        learners.add(new ClassifierTest(learnerOSE, "SubSpace"));
+//        learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
+        
+        AdaptiveRandomForest learnerARF = new AdaptiveRandomForest();
+        learnerARF.disableDriftDetectionOption.setValue(false);
         //learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
         //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
         //learners.add(new ClassifierTest(new HEFT(), "HEFT"));
-        learners.add(new ClassifierTest(new AdaptiveRandomForest(), "ARF"));
-        learners.add(new ClassifierTest(learnerOACUE, "OAccUpdt"));
+        learners.add(new ClassifierTest(learnerARF, "ARF"));
+        //learners.add(new ClassifierTest(learnerOACUE, "OAccUpdt"));
         //learners.add(new ClassifierTest(new OnlineAccuracyUpdatedEnsemble(), "OAccUpdtEnsmbl"));
         // Prepare Learners
         for (int i = 0; i < learners.size(); i++) {
