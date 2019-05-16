@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
@@ -20,6 +21,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.MultiClassClassifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
+import moa.classifiers.meta.DDOnlineSubspaceEnsemble.SubspaceLearner;
 import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
@@ -111,30 +113,48 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
         if (this.buffer.numInstances() != this.chunkSizeOption.getValue()) {
             this.buffer.add(instance);
         } else {
-            // Feature Selection
+        	// Feature Selection
             int[] newAttr = this.performFeatureSelection();
-            Arrays.sort(newAttr);
             StringBuffer sb = new StringBuffer("");
-            int n = 0;
-            for (n = 0; n < newAttr.length - 2; n++) {
-                sb.append((newAttr[n] + 1) + ",");
+            int idx;
+            if(newAttr.length != 1) {
+            	//System.out.println("Selection length = "+newAttr.length);
+	            Arrays.sort(newAttr);
+	            int n = 0;
+	            for (n = 0; n < newAttr.length - 2; n++) {
+	                sb.append((newAttr[n] + 1) + ",");
+	            }
+	            sb.append((newAttr[n] + 1));
+	            //System.out.println("Selected attributes = "+sb.toString());
+	            // Remove ensemble members
+	            idx = 0;
+	            int minCommom = this.ensemble.get(idx).commomAttributes(newAttr);
+	            for (int i = 0; i < this.ensemble.size(); i++) {
+	                int commomAttr = this.ensemble.get(i).commomAttributes(newAttr);
+	                if (commomAttr < minCommom) {
+	                    minCommom = commomAttr;
+	                    idx = i;
+	                }
+	            }	            
             }
-            sb.append((newAttr[n] + 1));
-
-            // Remove ensemble members
-            int idx = 0, minCommom = this.ensemble.get(idx).commomAttributes(newAttr);
-            for (int i = 0; i < this.ensemble.size(); i++) {
-                int commomAttr = this.ensemble.get(i).commomAttributes(newAttr);
-                if (commomAttr < minCommom) {
-                    minCommom = commomAttr;
-                    idx = i;
-                }
+            else {
+            	// Remove random ensemble member
+            	int randomNumber = (new Random()).nextInt(this.ensembleSizeOption.getValue());
+            	idx = randomNumber;
             }
             this.removeEnsembleMemser(idx);
             // Add new expert
             Classifier baseLearner = (Classifier) getPreparedClassOption(this.baseLearnerOption);
             baseLearner.resetLearning();
-            SubspaceLearner tmpClassifier = new SubspaceLearner(baseLearner.copy(), sb.toString(), new BasicClassificationPerformanceEvaluator());
+            SubspaceLearner tmpClassifier;
+            
+            if(newAttr.length != 1)
+            	tmpClassifier = new SubspaceLearner(baseLearner.copy(), sb.toString(), new BasicClassificationPerformanceEvaluator());
+            else {
+            	tmpClassifier = createRandomSubspaceClassifier(instance);
+            	//System.out.println("Null atribute selection");
+            }
+            
             // Training classifier
             for (int i = 0; i < this.buffer.numInstances(); i++) {
                 Instance trainInst = this.buffer.get(i);
@@ -224,6 +244,26 @@ public class OnlineSubspaceEnsemble extends AbstractClassifier implements MultiC
             k = 1;
 
         return k;
+    }
+    
+    private SubspaceLearner createRandomSubspaceClassifier(Instance instance) {
+    	BasicClassificationPerformanceEvaluator classificationEvaluator = new BasicClassificationPerformanceEvaluator();
+    	Classifier baseLearner = (Classifier) getPreparedClassOption(this.baseLearnerOption);
+        baseLearner.resetLearning();
+        
+        Integer[] indices = new Integer[instance.numAttributes() - 1];
+        int classIndex = instance.classIndex();
+        int offset = 0;
+        for (int i = 0; i < indices.length + 1; i++) {
+            if (i != classIndex) {
+                indices[offset++] = i + 1;
+            }
+        }
+        
+        SubspaceLearner tmpClassifier = new SubspaceLearner(baseLearner.copy(),
+                this.randomSubSpace(indices, this.subspaceSize, classIndex + 1),
+                (BasicClassificationPerformanceEvaluator) classificationEvaluator.copy());
+        return tmpClassifier;
     }
 
     protected String randomSubSpace(Integer[] indices, int subSpaceSize, int classIndex) {

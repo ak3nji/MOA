@@ -111,9 +111,9 @@ public class Experiment {
         
         
         
-        int ensembleSize = 10;
-        int windowSize = 10;
-        boolean crossValidation = false;
+        int ensembleSize = 3;
+        int windowSize = 500;
+        boolean crossValidation = true;
         
         DDOnlineSubspaceEnsemble learnerDDOSE = new DDOnlineSubspaceEnsemble();
         learnerDDOSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
@@ -137,12 +137,12 @@ public class Experiment {
         OnlineAccuracyUpdatedEnsemble learnerOACUE = new OnlineAccuracyUpdatedEnsemble();
         learnerOACUE.windowSizeOption.setValue(10);
         
-//        learners.add(new ClassifierTest(learnerDDRSE, "DDRandSM"));
         learners.add(new ClassifierTest(new DDClassifier(), "DDBasic"));
+        learners.add(new ClassifierTest(learnerDDRSE, "DD_RSM"));
 //        learners.add(new ClassifierTest(new DriftDetectionMethodClassifier(), "DDM_MOA"));
-        learners.add(new ClassifierTest(learnerDDOSE, "DDSubSpace"));
-//        learners.add(new ClassifierTest(learnerRSE, "RSubSpace"));
-//        learners.add(new ClassifierTest(learnerOSE, "SubSpace"));
+        learners.add(new ClassifierTest(learnerDDOSE, "DD+FS_SM"));
+        learners.add(new ClassifierTest(learnerRSE, "RSM"));
+        learners.add(new ClassifierTest(learnerOSE, "FS_SM"));
 //        learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
         
         AdaptiveRandomForest learnerARF = new AdaptiveRandomForest();
@@ -166,8 +166,10 @@ public class Experiment {
             stream.prepareForUse();
             stream.restart();
             // Runs the experiment
-            EvaluatePrequential evaluation = new EvaluatePrequential();
-            //EvaluatePrequentialCV evaluation = new EvaluatePrequentialCV();
+            
+            //EvaluatePrequential evaluation = new EvaluatePrequential();
+            EvaluatePrequentialCV evaluation = new EvaluatePrequentialCV();
+            
             evaluation.prepareForUse();
             evaluation.instanceLimitOption.setValue(100000);
             evaluation.sampleFrequencyOption.setValue(frequency);

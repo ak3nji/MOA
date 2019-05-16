@@ -198,14 +198,14 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
             StringBuffer sb = new StringBuffer("");
             int idx;
             if(newAttr.length != 1) {
-            	System.out.println("Selection length = "+newAttr.length);
+            	//System.out.println("Selection length = "+newAttr.length);
 	            Arrays.sort(newAttr);
 	            int n = 0;
 	            for (n = 0; n < newAttr.length - 2; n++) {
 	                sb.append((newAttr[n] + 1) + ",");
 	            }
 	            sb.append((newAttr[n] + 1));
-	            System.out.println("Selected attributes = "+sb.toString());
+	            //System.out.println("Selected attributes = "+sb.toString());
 	            // Remove ensemble members
 	            idx = 0;
 	            int minCommom = this.ensemble.get(idx).commomAttributes(newAttr);
@@ -232,7 +232,7 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
             	tmpClassifier = new SubspaceLearner(baseLearner.copy(), sb.toString(), new BasicClassificationPerformanceEvaluator());
             else {
             	tmpClassifier = createRandomSubspaceClassifier(instance);
-            	System.out.println("Null atribute selection");
+            	//System.out.println("Null atribute selection");
             }
             // Training classifier
             for (int i = 0; i < this.buffer.numInstances(); i++) {
