@@ -77,8 +77,8 @@ public class Experiment {
 
         namesDataSet.add("data/SEAFD_A.arff");
         namesDataSet.add("data/SEAFD_G.arff");
-        //namesDataSet.add("data/SEA_A.arff");
-        //namesDataSet.add("data/SEA_G.arff");
+        namesDataSet.add("data/SEA_A.arff");
+        namesDataSet.add("data/SEA_G.arff");
         //namesDataSet.add("data/AGR_A.arff");
         //namesDataSet.add("data/AGR_G.arff");
         //namesDataSet.add("data/HYPER.arff");
@@ -115,7 +115,7 @@ public class Experiment {
         
         
         
-        int ensembleSize = 1;
+        int ensembleSize = 10;
         int windowSize = 500;
         boolean crossValidation = false;
         
