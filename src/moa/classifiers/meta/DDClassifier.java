@@ -68,7 +68,7 @@ public class DDClassifier extends AbstractClassifier implements MultiClassClassi
     private static final long serialVersionUID = 1L;
 
     public ClassOption baseLearnerOption = new ClassOption("baseLearner", 'l', "Classifier to train.", Classifier.class,
-            "trees.RandomHoeffdingTree");
+            "trees.HoeffdingTree");
     
     public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
             "Drift detection method to use.", ChangeDetector.class, "DDM");
