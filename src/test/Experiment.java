@@ -35,6 +35,7 @@ import moa.classifiers.meta.DDOnlineSubspaceEnsemble;
 import moa.classifiers.meta.DDRandomSubspace;
 import moa.classifiers.meta.DynamicWeightedMajority;
 import moa.classifiers.meta.FilteredClassifier;
+import moa.classifiers.meta.HEFT;
 import moa.classifiers.meta.LearnNSE;
 import moa.classifiers.meta.OnlineAccuracyUpdatedEnsemble;
 import moa.classifiers.meta.OnlineEnsemble;
@@ -79,14 +80,15 @@ public class Experiment {
         namesDataSet.add("data/SEAFD_G.arff");
         namesDataSet.add("data/SEA_A.arff");
         namesDataSet.add("data/SEA_G.arff");
-        //namesDataSet.add("data/AGR_A.arff");
-        //namesDataSet.add("data/AGR_G.arff");
-        //namesDataSet.add("data/HYPER.arff");
-        //namesDataSet.add("data/RBF_M.arff");
-        //namesDataSet.add("data/RBF_F.arff");
-        //namesDataSet.add("data/LED_A.arff");
-        //namesDataSet.add("data/LED_G.arff");
-        //namesDataSet.add("data/weather.arff");
+        namesDataSet.add("data/covtypeNorm.arff");
+        namesDataSet.add("data/AGR_A.arff");
+        namesDataSet.add("data/AGR_G.arff");
+        namesDataSet.add("data/HYPER.arff");
+        namesDataSet.add("data/RBF_M.arff");
+        namesDataSet.add("data/RBF_F.arff");
+        namesDataSet.add("data/LED_A.arff");
+        namesDataSet.add("data/LED_G.arff");
+        namesDataSet.add("data/weather.arff");
         namesDataSet.add("data/elecNormNew.arff");
         //namesDataSet.add("data/spam_corpus.arff");
         //namesDataSet.add("data/kddcup.arff");
@@ -153,10 +155,14 @@ public class Experiment {
         
         AdaptiveRandomForest learnerARF = new AdaptiveRandomForest();
         learnerARF.disableDriftDetectionOption.setValue(false);
+        
+        HEFT learnerHEFT = new HEFT();
+        learnerHEFT.chunkSizeOption.setValue(windowSize);
+        learnerHEFT.ensembleSizeOption.setValue(ensembleSize);
         //learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
         //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
-        //learners.add(new ClassifierTest(new HEFT(), "HEFT"));
+        learners.add(new ClassifierTest(learnerHEFT, "HEFT"));
         learners.add(new ClassifierTest(learnerARF, "ARF"));
         //learners.add(new ClassifierTest(learnerOACUE, "OAccUpdt"));
         //learners.add(new ClassifierTest(new LearnNSE(),"LearnNSE"));
