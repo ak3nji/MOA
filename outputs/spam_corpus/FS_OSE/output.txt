@@ -1,0 +1,9 @@
+DATASET: data/spam_corpus.arff
+  Classifier    Accuracy    SD-Accu.     Kappa M     kappa T        Time       RAM-Hours
+----------------------------------------------------------------------------------------
+       FS_SM       95,09        3,60         NaN         NaN      591,39    -1,529931776
+
+AVERAGE RESULTS:
+  Classifier    Accuracy
+------------------------
+       FS_SM       95,09
