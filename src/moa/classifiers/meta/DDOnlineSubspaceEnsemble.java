@@ -128,18 +128,18 @@ public class DDOnlineSubspaceEnsemble extends AbstractClassifier implements Mult
     @Override
     public void trainOnInstanceImpl(Instance instance) {
     	
-    	
-    	int trueClass = (int)instance.classValue();
     	int sizeBuffer = 0;
-    	
-    	boolean prediction;
-        if (Utils.maxIndex(getVotesForInstance(instance)) == trueClass) {
-            prediction = true;
-        } else {
-            prediction = false;
-        }
+//    	int trueClass = (int)instance.classValue();
+//    	
+//    	
+//    	boolean prediction;
+//        if (Utils.maxIndex(getVotesForInstance(instance)) == trueClass) {
+//            prediction = true;
+//        } else {
+//            prediction = false;
+//        }
         
-        this.driftDetectionMethod.input(prediction ? 0.0 : 1.0);
+        this.driftDetectionMethod.input(this.correctlyClassifies(instance) ? 0.0 : 1.0);
         this.ddmLevel = DDM_INCONTROL_LEVEL;
         if (this.driftDetectionMethod.getChange()) {
          this.ddmLevel =  DDM_OUTCONTROL_LEVEL;

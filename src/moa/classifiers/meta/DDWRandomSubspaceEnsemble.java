@@ -2,9 +2,9 @@ package moa.classifiers.meta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import com.github.javacliparser.FloatOption;
 import com.github.javacliparser.IntOption;
@@ -25,6 +25,7 @@ import moa.classifiers.meta.DDOnlineSubspaceEnsemble.SubspaceLearner;
 import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
+import moa.core.Utils;
 import moa.evaluation.BasicClassificationPerformanceEvaluator;
 import moa.options.ClassOption;
 import moa.streams.filters.Selection;
@@ -59,7 +60,7 @@ import weka.attributeSelection.SymmetricalUncertAttributeSetEval;
  * @author Richard Kirkby (rkirkby@cs.waikato.ac.nz)
  * @version $Revision: 7 $
  */
-public class WOnlineSubspaceEnsemble extends AbstractClassifier implements MultiClassClassifier {
+public class DDWRandomSubspaceEnsemble extends AbstractClassifier implements MultiClassClassifier {
 
     @Override
     public String getPurposeString() {
@@ -74,15 +75,20 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
     public IntOption ensembleSizeOption = new IntOption("ensembleSize", 's', "The number of models in the bag.", 10, 1,
             Integer.MAX_VALUE);
 
-    public IntOption chunkSizeOption = new IntOption("chunkSize", 'c',
-            "The chunk size used for classifier creation and evaluation.", 10, 1, Integer.MAX_VALUE);
+    public IntOption minchunkSizeOption = new IntOption("minchunkSize", 'c',
+            "The minimium chunk size used for classifier creation and evaluation.", 100, 1, Integer.MAX_VALUE);
+    
+    public IntOption maxchunkSizeOption = new IntOption("maxchunkSize", 'm',
+            "The maximum chunk size used for classifier creation and evaluation.", 1000, 1, Integer.MAX_VALUE);
 
     public FloatOption subspaceSizeOption = new FloatOption("SubspaceSize", 'p',
             "Size of each subspace. Percentage of the number of attributes.", 0.5, 0.1, 1.0);
 
     public FloatOption lambdaOption = new FloatOption("lambda", 'a', "The lambda parameter for bagging.", 6.0, 1.0,
             Float.MAX_VALUE);
-
+    
+    public ClassOption driftDetectionMethodOption = new ClassOption("driftDetectionMethod", 'd',
+            "Drift detection method to use.", ChangeDetector.class, "DDM");
 
     protected List<SubspaceLearner> ensemble;
     protected List<Double> weights;
@@ -90,93 +96,148 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
     protected List<Double> instancesCorrectlyClassified;
     protected Instances buffer;
     protected int subspaceSize;
-    
+    protected ChangeDetector driftDetectionMethod;
+    protected boolean isChunkReady;
+    protected int ddmLevel;
+    protected boolean isDriftDetected;
+    public boolean isWarningDetected() {
+        return (this.ddmLevel == DDM_WARNING_LEVEL);
+    }
+
+    public boolean isChangeDetected() {
+        return (this.ddmLevel == DDM_OUTCONTROL_LEVEL);
+    }
+
+    public static final int DDM_INCONTROL_LEVEL = 0;
+
+    public static final int DDM_WARNING_LEVEL = 1;
+
+    public static final int DDM_OUTCONTROL_LEVEL = 2;
 
     @Override
     public void resetLearningImpl() {
-    	
+    	this.driftDetectionMethod = ((ChangeDetector) getPreparedClassOption(this.driftDetectionMethodOption)).copy();
         this.ensemble = null;
         this.buffer = null;
+        this.isChunkReady = false;
+        this.isDriftDetected = false;
     }
+    
+    protected int changesDetected = 0;
+    protected int ensembleUpdates = 0;
 
+    
     @Override
     public void trainOnInstanceImpl(Instance instance) {
-
+    	
+    	
+    	int sizeBuffer = 0;
+    	
+        
+        this.driftDetectionMethod.input(this.correctlyClassifies(instance) ? 0.0 : 1.0);
+        this.ddmLevel = DDM_INCONTROL_LEVEL;
+        if (this.driftDetectionMethod.getChange()) {
+         this.ddmLevel =  DDM_OUTCONTROL_LEVEL;
+        }
+        if (this.driftDetectionMethod.getWarningZone()) {
+           this.ddmLevel =  DDM_WARNING_LEVEL;
+        }
+        
+    	
         if (this.ensemble == null) {
             this.buildEnsemble(instance);
         }
 
-        // Store instance in the buffer
+        // Starts buffer
         if (this.buffer == null) {
             this.buffer = new Instances(instance.dataset());
         }
 
-        // Chunk is not full
-        if (this.buffer.numInstances() != this.chunkSizeOption.getValue()) {
-            this.buffer.add(instance);
-        } else {
-        	// Feature Selection
-            int[] newAttr = this.performFeatureSelection();
-            StringBuffer sb = new StringBuffer("");
-            int idx;
-            if(newAttr.length != 1) {
-            	//System.out.println("Selection length = "+newAttr.length);
-	            Arrays.sort(newAttr);
-	            int n = 0;
-	            for (n = 0; n < newAttr.length - 2; n++) {
-	                sb.append((newAttr[n] + 1) + ",");
-	            }
-	            sb.append((newAttr[n] + 1));
-	            //System.out.println("Selected attributes = "+sb.toString());
-	            // Remove ensemble members
-	            idx = 0;
-	            int minCommom = this.ensemble.get(idx).commomAttributes(newAttr);
-	            for (int i = 0; i < this.ensemble.size(); i++) {
-	                int commomAttr = this.ensemble.get(i).commomAttributes(newAttr);
-	                if (commomAttr < minCommom) {
-	                    minCommom = commomAttr;
-	                    idx = i;
-	                }
-	            }	            
-            }
-            else {
-            	// Remove random ensemble member
-            	int randomNumber = (new Random()).nextInt(this.ensembleSizeOption.getValue());
-            	idx = randomNumber;
-            }
+        
+        sizeBuffer = this.buffer.numInstances();
+        // Add instance to buffer or discard it.
+    	switch(this.ddmLevel) {
+    		case DDM_WARNING_LEVEL:
+    			//Resets buffer if it is a warning before a change
+    			if(!this.isDriftDetected) {
+    				this.buffer = new Instances(instance.dataset());
+    			}
+    			this.buffer.add(instance);
+    			break;
+    		case DDM_OUTCONTROL_LEVEL:
+    			this.buffer.add(instance);
+    			this.changesDetected++;
+    			this.isDriftDetected = true;
+    			break;
+    		case DDM_INCONTROL_LEVEL:
+    			//If the buffer size is bigger than the max acceptable, reset buffer
+    			if (sizeBuffer > this.maxchunkSizeOption.getValue()) {
+    				this.buffer = new Instances(instance.dataset());
+    				this.buffer.add(instance); //Remove this line if you want to consider the last warning a false warning and want to wait for a new one
+    			}
+    			//If there was a warning and the minimum chunk size wasn't achieved, add instance to buffer.
+    			if (sizeBuffer > 0 && sizeBuffer < this.minchunkSizeOption.getValue()) {
+    				this.buffer.add(instance);
+    			}
+    			//If the buffer is ready to be used for training, set it to ready.
+    			if (sizeBuffer >= this.minchunkSizeOption.getValue() && isDriftDetected){
+    				this.isChunkReady = true;
+    				this.isDriftDetected = false; // resets the drift detection flag
+    			}
+    	}
+        
+    	// Checks if the chunk is ready to be used for training bufferSize >= minChunkSize
+        if(this.isChunkReady) {
             
-            Double minPredictions = Collections.min(this.instancesCorrectlyClassified);
+        	// Remove random ensemble member
+        	int idx;
+        	
+        	
+        	/*
+            // Remove ensemble member with lowest Accuracy
+            int idx = 0;
+			double minF1 = this.ensemble.get(idx).evaluator.getFractionCorrectlyClassified();
+			
+            for (int i = 0; i < this.ensemble.size(); i++) {
+                double classifierF1 = this.ensemble.get(i).evaluator.getFractionCorrectlyClassified();
+                if (classifierF1 < minF1) {
+                	minF1 = classifierF1;
+                    idx = i;
+                }
+            }*/
+        	
+        	Double minPredictions = Collections.min(this.instancesCorrectlyClassified);
         	idx = this.instancesCorrectlyClassified.indexOf(minPredictions);
         	
             this.removeEnsembleMemser(idx);
-            // Add new expert
+            // Add new random subspace classifier
             Classifier baseLearner = (Classifier) getPreparedClassOption(this.baseLearnerOption);
             baseLearner.resetLearning();
-            SubspaceLearner tmpClassifier;
-            
-            if(newAttr.length != 1)
-            	tmpClassifier = new SubspaceLearner(baseLearner.copy(), sb.toString(), new BasicClassificationPerformanceEvaluator());
-            else {
-            	tmpClassifier = createRandomSubspaceClassifier(instance);
-            	//System.out.println("Null atribute selection");
-            }
-            
-            // Training classifier
+            SubspaceLearner tmpClassifier = createRandomSubspaceClassifier(instance);
+            // Train classifier
             for (int i = 0; i < this.buffer.numInstances(); i++) {
                 Instance trainInst = this.buffer.get(i);
                 tmpClassifier.trainOnInstance(trainInst);
             }
+            this.ensembleUpdates++;
+            //System.out.println("Ensemble updated - | Changes Detected:"+this.changesDetected+" | Classifier Updates:"+this.ensembleUpdates
+            //		+" | Training Set Size:"+this.buffer.size());
+            
             this.ensemble.add(tmpClassifier);
             this.instancesSeen.add(0.00001);
             this.instancesCorrectlyClassified.add(0.00001/this.ensemble.size());
             
             //Reset weights
             for (int i = 0; i < this.ensemble.size(); i++) {
-            this.instancesSeen.set(i,0.00001);
-            this.instancesCorrectlyClassified.set(i,0.00001/this.ensemble.size());
+	            this.instancesSeen.set(i,0.00001);
+	            this.instancesCorrectlyClassified.set(i,0.00001/this.ensemble.size());
             }
             
             this.buffer = new Instances(this.getModelContext());
+            this.isChunkReady = false;
+            
+            
+            
         }
 
         for (int i = 0; i < this.ensemble.size(); i++) {
@@ -201,6 +262,7 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
         if (this.ensemble == null) {
             this.buildEnsemble(instance);
         }
+
         double weight;
         DoubleVector combinedVote = new DoubleVector();
         for (int i = 0; i < this.ensemble.size(); i++) {
@@ -212,7 +274,6 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
                 combinedVote.addValues(vote);
             }
         }
-
         return combinedVote.getArrayRef();
     }
 
@@ -258,17 +319,6 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
             this.instancesCorrectlyClassified.add(0.00001/this.ensemble.size());
         }
     }
-
-    protected int numberOfAttributes(int total, double fraction) {
-        int k = (int) Math.round((fraction < 1.0) ? total * fraction : fraction);
-
-        if (k > total)
-            k = total;
-        if (k < 1)
-            k = 1;
-
-        return k;
-    }
     
     private SubspaceLearner createRandomSubspaceClassifier(Instance instance) {
     	BasicClassificationPerformanceEvaluator classificationEvaluator = new BasicClassificationPerformanceEvaluator();
@@ -288,6 +338,17 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
                 this.randomSubSpace(indices, this.subspaceSize, classIndex + 1),
                 (BasicClassificationPerformanceEvaluator) classificationEvaluator.copy());
         return tmpClassifier;
+    }
+
+    protected int numberOfAttributes(int total, double fraction) {
+        int k = (int) Math.round((fraction < 1.0) ? total * fraction : fraction);
+
+        if (k > total)
+            k = total;
+        if (k < 1)
+            k = 1;
+
+        return k;
     }
 
     protected String randomSubSpace(Integer[] indices, int subSpaceSize, int classIndex) {
@@ -359,16 +420,19 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
 
             this.classifier.trainOnInstance(this.filterInstance(instance));
         }
+        
+        public boolean correctlyClassifies(Instance instance) {
+        	if (this.streamHeader == null) {
+                this.streamHeader = this.constructHeader(instance);
+            }
+            return this.classifier.correctlyClassifies(this.filterInstance(instance));
+        }
 
         public double[] getVotesForInstance(Instance instance) {
             if (this.streamHeader == null) {
                 this.streamHeader = this.constructHeader(instance);
             }
             return this.classifier.getVotesForInstance(this.filterInstance(instance));
-        }
-        
-        public boolean correctlyClassifies(Instance instance) {
-            return this.classifier.correctlyClassifies(this.filterInstance(instance));
         }
 
         private Instance filterInstance(Instance instance) {

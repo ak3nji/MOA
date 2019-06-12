@@ -217,8 +217,8 @@ public class DDWOnlineSubspaceEnsemble extends AbstractClassifier implements Mul
             	int randomNumber = (new Random()).nextInt(this.ensembleSizeOption.getValue());
             	idx = randomNumber;
             }
-//        	Double minPredictions = Collections.min(this.instancesCorrectlyClassified);
-//        	idx = this.instancesCorrectlyClassified.indexOf(minPredictions);
+        	Double minPredictions = Collections.min(this.instancesCorrectlyClassified);
+        	idx = this.instancesCorrectlyClassified.indexOf(minPredictions);
             this.removeEnsembleMemser(idx);
             // Add new expert
             Classifier baseLearner = (Classifier) getPreparedClassOption(this.baseLearnerOption);
@@ -243,10 +243,13 @@ public class DDWOnlineSubspaceEnsemble extends AbstractClassifier implements Mul
             this.ensemble.add(tmpClassifier);
             this.instancesSeen.add(0.00001);
             this.instancesCorrectlyClassified.add(0.00001/this.ensemble.size());
-//            for (int i = 0; i < this.ensemble.size(); i++) {
-//	            this.instancesSeen.set(i,0.00001);
-//	            this.instancesCorrectlyClassified.set(i,0.00001/this.ensemble.size());
-//            }
+            
+            //Reset weights
+            for (int i = 0; i < this.ensemble.size(); i++) {
+	            this.instancesSeen.set(i,0.00001);
+	            this.instancesCorrectlyClassified.set(i,0.00001/this.ensemble.size());
+            }
+            
             //this.weights.add(1.0 / (double) this.ensemble.size());
             this.buffer = new Instances(this.getModelContext());
             this.isChunkReady = false;
@@ -440,6 +443,9 @@ public class DDWOnlineSubspaceEnsemble extends AbstractClassifier implements Mul
         }
         
         public boolean correctlyClassifies(Instance instance) {
+        	if (this.streamHeader == null) {
+                this.streamHeader = this.constructHeader(instance);
+            }
             return this.classifier.correctlyClassifies(this.filterInstance(instance));
         }
 

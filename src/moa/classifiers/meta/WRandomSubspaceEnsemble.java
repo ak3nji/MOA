@@ -21,7 +21,7 @@ import moa.classifiers.AbstractClassifier;
 import moa.classifiers.Classifier;
 import moa.classifiers.MultiClassClassifier;
 import moa.classifiers.core.driftdetection.ChangeDetector;
-import moa.classifiers.meta.DDOnlineSubspaceEnsemble.SubspaceLearner;
+import moa.classifiers.meta.DDRandomSubspace.SubspaceLearner;
 import moa.core.DoubleVector;
 import moa.core.Measurement;
 import moa.core.MiscUtils;
@@ -59,7 +59,7 @@ import weka.attributeSelection.SymmetricalUncertAttributeSetEval;
  * @author Richard Kirkby (rkirkby@cs.waikato.ac.nz)
  * @version $Revision: 7 $
  */
-public class WOnlineSubspaceEnsemble extends AbstractClassifier implements MultiClassClassifier {
+public class WRandomSubspaceEnsemble extends AbstractClassifier implements MultiClassClassifier {
 
     @Override
     public String getPurposeString() {
@@ -115,52 +115,17 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
         if (this.buffer.numInstances() != this.chunkSizeOption.getValue()) {
             this.buffer.add(instance);
         } else {
-        	// Feature Selection
-            int[] newAttr = this.performFeatureSelection();
-            StringBuffer sb = new StringBuffer("");
-            int idx;
-            if(newAttr.length != 1) {
-            	//System.out.println("Selection length = "+newAttr.length);
-	            Arrays.sort(newAttr);
-	            int n = 0;
-	            for (n = 0; n < newAttr.length - 2; n++) {
-	                sb.append((newAttr[n] + 1) + ",");
-	            }
-	            sb.append((newAttr[n] + 1));
-	            //System.out.println("Selected attributes = "+sb.toString());
-	            // Remove ensemble members
-	            idx = 0;
-	            int minCommom = this.ensemble.get(idx).commomAttributes(newAttr);
-	            for (int i = 0; i < this.ensemble.size(); i++) {
-	                int commomAttr = this.ensemble.get(i).commomAttributes(newAttr);
-	                if (commomAttr < minCommom) {
-	                    minCommom = commomAttr;
-	                    idx = i;
-	                }
-	            }	            
-            }
-            else {
-            	// Remove random ensemble member
-            	int randomNumber = (new Random()).nextInt(this.ensembleSizeOption.getValue());
-            	idx = randomNumber;
-            }
-            
-            Double minPredictions = Collections.min(this.instancesCorrectlyClassified);
-        	idx = this.instancesCorrectlyClassified.indexOf(minPredictions);
+        	// Remove random ensemble member
+        	//int randomNumber = (new Random()).nextInt(this.ensembleSizeOption.getValue());
+        	int idx;
         	
+        	Double minPredictions = Collections.min(this.instancesCorrectlyClassified);
+        	idx = this.instancesCorrectlyClassified.indexOf(minPredictions);
             this.removeEnsembleMemser(idx);
-            // Add new expert
+            // Add new random subspace classifier
             Classifier baseLearner = (Classifier) getPreparedClassOption(this.baseLearnerOption);
             baseLearner.resetLearning();
-            SubspaceLearner tmpClassifier;
-            
-            if(newAttr.length != 1)
-            	tmpClassifier = new SubspaceLearner(baseLearner.copy(), sb.toString(), new BasicClassificationPerformanceEvaluator());
-            else {
-            	tmpClassifier = createRandomSubspaceClassifier(instance);
-            	//System.out.println("Null atribute selection");
-            }
-            
+            SubspaceLearner tmpClassifier = createRandomSubspaceClassifier(instance);
             // Training classifier
             for (int i = 0; i < this.buffer.numInstances(); i++) {
                 Instance trainInst = this.buffer.get(i);
@@ -180,7 +145,6 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
         }
 
         for (int i = 0; i < this.ensemble.size(); i++) {
-        	
         	this.instancesSeen.set(i,this.instancesSeen.get(i)+1);
         	if (this.ensemble.get(i).correctlyClassifies(instance)){
         		this.instancesCorrectlyClassified.set(i,this.instancesCorrectlyClassified.get(i)+1);
@@ -201,6 +165,7 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
         if (this.ensemble == null) {
             this.buildEnsemble(instance);
         }
+        
         double weight;
         DoubleVector combinedVote = new DoubleVector();
         for (int i = 0; i < this.ensemble.size(); i++) {
@@ -269,6 +234,18 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
 
         return k;
     }
+
+    protected String randomSubSpace(Integer[] indices, int subSpaceSize, int classIndex) {
+        Collections.shuffle(Arrays.asList(indices), this.classifierRandom);
+        StringBuffer sb = new StringBuffer("");
+        int i = 0;
+        for (i = 0; i < subSpaceSize - 1; i++) {
+            sb.append(indices[i] + ",");
+        }
+        sb.append(indices[i]);
+
+        return sb.toString();
+    }
     
     private SubspaceLearner createRandomSubspaceClassifier(Instance instance) {
     	BasicClassificationPerformanceEvaluator classificationEvaluator = new BasicClassificationPerformanceEvaluator();
@@ -288,18 +265,6 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
                 this.randomSubSpace(indices, this.subspaceSize, classIndex + 1),
                 (BasicClassificationPerformanceEvaluator) classificationEvaluator.copy());
         return tmpClassifier;
-    }
-
-    protected String randomSubSpace(Integer[] indices, int subSpaceSize, int classIndex) {
-        Collections.shuffle(Arrays.asList(indices), this.classifierRandom);
-        StringBuffer sb = new StringBuffer("");
-        int i = 0;
-        for (i = 0; i < subSpaceSize - 1; i++) {
-            sb.append(indices[i] + ",");
-        }
-        sb.append(indices[i]);
-
-        return sb.toString();
     }
 
     private int[] performFeatureSelection() {
@@ -359,16 +324,16 @@ public class WOnlineSubspaceEnsemble extends AbstractClassifier implements Multi
 
             this.classifier.trainOnInstance(this.filterInstance(instance));
         }
+        
+        public boolean correctlyClassifies(Instance instance) {
+            return this.classifier.correctlyClassifies(this.filterInstance(instance));
+        }
 
         public double[] getVotesForInstance(Instance instance) {
             if (this.streamHeader == null) {
                 this.streamHeader = this.constructHeader(instance);
             }
             return this.classifier.getVotesForInstance(this.filterInstance(instance));
-        }
-        
-        public boolean correctlyClassifies(Instance instance) {
-            return this.classifier.correctlyClassifies(this.filterInstance(instance));
         }
 
         private Instance filterInstance(Instance instance) {

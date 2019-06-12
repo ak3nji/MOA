@@ -34,6 +34,7 @@ import moa.classifiers.meta.DDOnlineEnsemble;
 import moa.classifiers.meta.DDOnlineSubspaceEnsemble;
 import moa.classifiers.meta.DDRandomSubspace;
 import moa.classifiers.meta.DDWOnlineSubspaceEnsemble;
+import moa.classifiers.meta.DDWRandomSubspaceEnsemble;
 import moa.classifiers.meta.DynamicWeightedMajority;
 import moa.classifiers.meta.FilteredClassifier;
 import moa.classifiers.meta.HEFT;
@@ -44,6 +45,7 @@ import moa.classifiers.meta.OnlineSubspaceEnsemble;
 import moa.classifiers.meta.PersistentClassifier;
 import moa.classifiers.meta.RandomSubspaceEnsemble;
 import moa.classifiers.meta.WOnlineSubspaceEnsemble;
+import moa.classifiers.meta.WRandomSubspaceEnsemble;
 import moa.evaluation.preview.LearningCurve;
 import moa.streams.ArffFileStream;
 import moa.streams.ConceptDriftStream;
@@ -119,7 +121,7 @@ public class Experiment {
         
         
         
-        int ensembleSize = 10;
+        int ensembleSize = 10 ;
         int windowSize = 500;
         boolean crossValidation = false;
         
@@ -139,9 +141,18 @@ public class Experiment {
         learnerDDRSE.minchunkSizeOption.setValue(windowSize);
         learnerDDRSE.ensembleSizeOption.setValue(ensembleSize);
         
+        DDWRandomSubspaceEnsemble learnerDDWRSE = new DDWRandomSubspaceEnsemble();
+        learnerDDWRSE.driftDetectionMethodOption.setCurrentObject(new EDDM());
+        learnerDDWRSE.minchunkSizeOption.setValue(windowSize);
+        learnerDDWRSE.ensembleSizeOption.setValue(ensembleSize);
+        
         RandomSubspaceEnsemble learnerRSE = new RandomSubspaceEnsemble();
         learnerRSE.chunkSizeOption.setValue(windowSize);
         learnerRSE.ensembleSizeOption.setValue(ensembleSize);
+        
+        WRandomSubspaceEnsemble learnerWRSE = new WRandomSubspaceEnsemble();
+        learnerWRSE.chunkSizeOption.setValue(windowSize);
+        learnerWRSE.ensembleSizeOption.setValue(ensembleSize);
         
         OnlineSubspaceEnsemble learnerOSE = new OnlineSubspaceEnsemble();
         learnerOSE.chunkSizeOption.setValue(windowSize);
@@ -152,18 +163,20 @@ public class Experiment {
         learnerWOSE.ensembleSizeOption.setValue(ensembleSize);
         
         OnlineAccuracyUpdatedEnsemble learnerOACUE = new OnlineAccuracyUpdatedEnsemble();
-        learnerOACUE.windowSizeOption.setValue(10);
+        learnerOACUE.windowSizeOption.setValue(windowSize);
         
         //learners.add(new ClassifierTest(new DDClassifier(), "DD_Hoeff"));
         //learners.add(new ClassifierTest(new OnlineEnsemble(), "HoeffEnsmbl"));
         //learners.add(new ClassifierTest(new DDOnlineEnsemble(), "DD_HffEnsmbl"));
         //learners.add(new ClassifierTest(learnerDDRSE, "DD_RSM"));
+        learners.add(new ClassifierTest(learnerDDWRSE, "DD_RSM"));
         //learners.add(new ClassifierTest(new DriftDetectionMethodClassifier(), "DDM_MOA"));
-        learners.add(new ClassifierTest(learnerDDOSE, "DD+FS"));
-        learners.add(new ClassifierTest(learnerDDWOSE, "DD+FS+W"));
+        //learners.add(new ClassifierTest(learnerDDOSE, "DD+FS"));
+        learners.add(new ClassifierTest(learnerDDWOSE, "DD+FS"));
         //learners.add(new ClassifierTest(learnerRSE, "RSM"));
-        learners.add(new ClassifierTest(learnerOSE, "FS"));
-        learners.add(new ClassifierTest(learnerWOSE, "W+FS"));
+        learners.add(new ClassifierTest(learnerRSE, "RSM"));
+        //learners.add(new ClassifierTest(learnerOSE, "FS"));
+        learners.add(new ClassifierTest(learnerWOSE, "FS"));
         //learners.add(new ClassifierTest(new PersistentClassifier(), "Persistent"));
         
         AdaptiveRandomForest learnerARF = new AdaptiveRandomForest();
@@ -176,9 +189,9 @@ public class Experiment {
         //learners.add(new ClassifierTest(new DynamicWeightedMajority(), "DWM"));
         //learners.add(new ClassifierTest(new NaiveBayes(), "NB"));
         //learners.add(new ClassifierTest(new HoeffdingAdaptiveTree(), "HAT"));
-        //learners.add(new ClassifierTest(learnerHEFT, "HEFT"));
+        learners.add(new ClassifierTest(learnerHEFT, "HEFT"));
         //learners.add(new ClassifierTest(learnerARF, "ARF"));
-        //learners.add(new ClassifierTest(learnerOACUE, "OAccUpdt"));
+        learners.add(new ClassifierTest(learnerOACUE, "OAccUpdt"));
         //learners.add(new ClassifierTest(new LearnNSE(),"LearnNSE"));
         //learners.add(new ClassifierTest(new OnlineAccuracyUpdatedEnsemble(), "OAccUpdtEnsmbl"));
         // Prepare Learners
